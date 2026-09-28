@@ -1,0 +1,28 @@
+from enum import Enum
+
+class Category(str, Enum):
+    DISABILITY = "DISABILITY"
+    EDUCATION = "EDUCATION"
+    HOUSING = "HOUSING"
+    HEALTHCARE = "HEALTHCARE"
+    EMPLOYMENT = "EMPLOYMENT"
+    OTHER = "OTHER"
+
+class Jurisdiction(str, Enum):
+    FEDERAL = "FEDERAL"
+    STATE = "STATE"
+
+class RuleType(str, Enum):
+    SERVICE_ERA = "SERVICE_ERA"
+    DISCHARGE_STATUS = "DISCHARGE_STATUS"
+    DISABILITY_RATING_MIN = "DISABILITY_RATING_MIN"
+    STATE_RESIDENCY = "STATE_RESIDENCY"
+    INCOME_MAX = "INCOME_MAX"
+    OTHER = "OTHER"
+
+class ChecklistStatus(str, Enum):
+    NOT_STARTED = "NOT_STARTED"
+    IN_PROGRESS = "IN_PROGRESS"
+    APPLIED = "APPLIED"
+    APPROVED = "APPROVED"
+    DENIED = "DENIED"
