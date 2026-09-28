@@ -1,0 +1,76 @@
+import httpx
+from bs4 import BeautifulSoup
+import os
+from dotenv import load_dotenv
+from scraper.pipeline import save_program
+from api.models.constants import Jurisdiction, Category
+from api.db import SessionLocal
+
+load_dotenv()
+
+SCRAPER_CONTACT=os.environ["SCRAPER_CONTACT"]
+RAW_DIR = "scraper/raw"
+
+def save_raw_html(html, filename):
+    os.makedirs(RAW_DIR, exist_ok=True)
+    with open(os.path.join(RAW_DIR, filename), "w", encoding="utf-8") as f:
+        f.write(html)
+
+def fetch_page(url):
+    custom_headers = {"User-Agent": f"Vetted/0.1 (open-source; {SCRAPER_CONTACT})"}
+    response = httpx.get(
+        url,
+        headers=custom_headers,
+        follow_redirects=True,
+        timeout=10.0
+    )
+
+    response.raise_for_status()
+
+    return response.text
+
+def parse_disability_eligibility(html):
+    soup = BeautifulSoup(html, "lxml")
+
+    h1 = soup.find('h1')
+    if h1 is None:
+        raise ValueError("No h1 found - page structure may have changed")
+    title = h1.get_text(separator="\n", strip=True)
+
+    intro_div = soup.find('div', class_='va-introtext')
+    intro = intro_div.get_text(separator="\n", strip=True) if intro_div else ""
+
+    sections = []
+
+    divs = soup.find_all('div', attrs={'data-template': 'paragraphs/q_a'})
+
+    for div in divs:
+        heading = div.find('h2')
+        body = div.find('div', attrs={'data-template': 'paragraphs/wysiwyg'})
+
+        if heading is None or body is None:
+            continue
+        sections.append(heading.get_text(separator="\n", strip=True) + '\n' + body.get_text(separator="\n", strip=True))
+    if not sections:
+        raise ValueError("No Q&A sections found - selectors may be broken")
+    
+    return title, intro, sections
+
+URL = "https://www.va.gov/disability/eligibility/"
+def run():
+    html = fetch_page(URL)
+    save_raw_html(html, "va_disability_eligibility.html")
+    title, intro, sections = parse_disability_eligibility(html)
+
+    with SessionLocal() as session:
+        save_program(
+            session, name=title, description=intro, source_url=URL, jurisdiction=Jurisdiction.FEDERAL.value, state=None,
+            category = Category.DISABILITY.value, sections = sections
+        )
+
+    print(f"Saved {len(sections)} sections")
+
+
+if __name__ == "__main__":
+    run()
+    

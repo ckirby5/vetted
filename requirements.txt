@@ -5,3 +5,6 @@ alembic
 psycopg[binary]
 python-dotenv
 elasticsearch>=8,<9
+httpx
+beautifulsoup4
+lxml
