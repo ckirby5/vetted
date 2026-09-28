@@ -18,7 +18,7 @@ config = context.config
 
 load_dotenv()  # Load environment variables from .env file
 
-db_url = os.environ["DATABASE_URL_LOCAL"]  # Get the database URL from environment variables
+db_url = os.environ["DATABASE_URL"]  # Get the database URL from environment variables
 config.set_main_option("sqlalchemy.url", db_url)  # Set the database URL in Alembic config
 
 # Interpret the config file for Python logging.
