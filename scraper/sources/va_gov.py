@@ -1,10 +1,12 @@
 import httpx
-from bs4 import BeautifulSoup
 import os
+
+from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from scraper.pipeline import save_program
 from api.models.constants import Jurisdiction, Category
 from api.db import SessionLocal
+from api.es_client import get_es_client, create_index_if_not_exists, index_program_rules
 
 load_dotenv()
 
@@ -62,14 +64,17 @@ def run():
     save_raw_html(html, "va_disability_eligibility.html")
     title, intro, sections = parse_disability_eligibility(html)
 
+    es_client = get_es_client()
+    create_index_if_not_exists(es_client)
+
     with SessionLocal() as session:
-        save_program(
+        program = save_program(
             session, name=title, description=intro, source_url=URL, jurisdiction=Jurisdiction.FEDERAL.value, state=None,
             category = Category.DISABILITY.value, sections = sections
         )
+        index_program_rules(es_client, program)
 
-    print(f"Saved {len(sections)} sections")
-
+    print(f"Saved {len(sections)} sections, indexed to Elasticsearch")
 
 if __name__ == "__main__":
     run()
