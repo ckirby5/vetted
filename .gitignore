@@ -27,6 +27,8 @@ share/python-wheels/
 MANIFEST
 data/
 scraper/raw/
+scraper/test_playwright.py
+scraper/sources/test_script.py
 
 
 # PyInstaller
