@@ -1,4 +1,3 @@
-import httpx
 import os
 
 from bs4 import BeautifulSoup
@@ -7,6 +6,7 @@ from scraper.pipeline import save_program
 from api.models.constants import Jurisdiction, Category
 from api.db import SessionLocal
 from api.es_client import get_es_client, create_index_if_not_exists, index_program_rules
+from scraper.http import fetch_page
 
 load_dotenv()
 
@@ -17,19 +17,6 @@ def save_raw_html(html, filename):
     os.makedirs(RAW_DIR, exist_ok=True)
     with open(os.path.join(RAW_DIR, filename), "w", encoding="utf-8") as f:
         f.write(html)
-
-def fetch_page(url):
-    custom_headers = {"User-Agent": f"Vetted/0.1 (open-source; {SCRAPER_CONTACT})"}
-    response = httpx.get(
-        url,
-        headers=custom_headers,
-        follow_redirects=True,
-        timeout=10.0
-    )
-
-    response.raise_for_status()
-
-    return response.text
 
 def parse_disability_eligibility(html):
     soup = BeautifulSoup(html, "lxml")
