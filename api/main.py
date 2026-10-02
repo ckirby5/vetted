@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, Query, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from typing import Annotated
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -15,6 +16,13 @@ async def lifespan(app):
     yield
 
 app = FastAPI(lifespan=lifespan)
+
+app.add_middleware(
+     CORSMiddleware,
+     allow_origins=["http://localhost:5173"],
+     allow_methods=["*"],
+     allow_headers=["*"]
+)
 
 DbSession = Annotated[Session, Depends(get_db)]
 
